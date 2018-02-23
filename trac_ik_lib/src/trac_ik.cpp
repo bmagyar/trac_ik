@@ -72,10 +72,16 @@ namespace TRAC_IK {
     KDL::Tree tree;
     
     if (!kdl_parser::treeFromUrdfModel(robot_model, tree))
-      ROS_FATAL("Failed to extract kdl tree from xml robot description");
+    {
+      ROS_FATAL_NAMED("trac_ik", "Failed to extract kdl tree from xml robot description");
+      return;
+    }
 
     if(!tree.getChain(base_link, tip_link, chain))
-      ROS_FATAL("Couldn't find chain %s to %s",base_link.c_str(),tip_link.c_str());
+    {
+      ROS_FATAL_NAMED("trac_ik", "Couldn't find chain %s to %s",base_link.c_str(),tip_link.c_str());
+      return;
+    }
 
     std::vector<KDL::Segment> chain_segs = chain.segments;
 
