@@ -42,13 +42,15 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace TRAC_IK {
 
   enum SolveType { Speed, Distance, Manip1, Manip2 };
+  typedef std::map<std::string, double> FixedJoints;
 
   class TRAC_IK 
   {
   public:
     TRAC_IK(const KDL::Chain& _chain, const KDL::JntArray& _q_min, const KDL::JntArray& _q_max, double _maxtime=0.005, double _eps=1e-5, SolveType _type=Speed);
 
-    TRAC_IK(const std::string& base_link, const std::string& tip_link, const std::string& URDF_param="/robot_description", double _maxtime=0.005, double _eps=1e-5, SolveType _type=Speed);
+    TRAC_IK(const std::string& base_link, const std::string& tip_link, const std::string& URDF_param="/robot_description", 
+            double _maxtime=0.005, double _eps=1e-5, const FixedJoints& fixed_joints = FixedJoints(), SolveType _type=Speed);
 
     ~TRAC_IK();
 

@@ -40,7 +40,8 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace TRAC_IK {
 
-  TRAC_IK::TRAC_IK(const std::string& base_link, const std::string& tip_link, const std::string& URDF_param, double _maxtime, double _eps, SolveType _type ) :
+  TRAC_IK::TRAC_IK(const std::string& base_link, const std::string& tip_link, const std::string& URDF_param, 
+                   double _maxtime, double _eps, const FixedJoints& fixed_joints, SolveType _type) :
     initialized(false),
     eps(_eps),
     maxtime(_maxtime),
@@ -93,40 +94,41 @@ namespace TRAC_IK {
     ub.resize(chain.getNrOfJoints());
 
     uint joint_num=0;
-    for(unsigned int i = 0; i < chain_segs.size(); ++i) {
-      joint = robot_model.getJoint(chain_segs[i].getJoint().getName());
-      if (joint->type != urdf::Joint::UNKNOWN && joint->type != urdf::Joint::FIXED) {
+    for(unsigned int i = 0; i < chain_segs.size(); ++i) 
+    {
+      const auto& joint_name = chain_segs[i].getJoint().getName();
+      joint = robot_model.getJoint(joint_name);
+      if (joint->type != urdf::Joint::UNKNOWN && joint->type != urdf::Joint::FIXED) 
+      {
         joint_num++;
-        float lower, upper;
-        int hasLimits;
-        if ( joint->type != urdf::Joint::CONTINUOUS ) {
-          if(joint->safety) {
-            lower = std::max(joint->limits->lower, joint->safety->soft_lower_limit);
-            upper = std::min(joint->limits->upper, joint->safety->soft_upper_limit);
-          } else {
-            lower = joint->limits->lower;
-            upper = joint->limits->upper;
+        if ( joint->type != urdf::Joint::CONTINUOUS ) 
+        {
+          if(joint->safety) 
+          {
+            lb(joint_num-1) = std::max(joint->limits->lower, joint->safety->soft_lower_limit);
+            ub(joint_num-1) = std::min(joint->limits->upper, joint->safety->soft_upper_limit);
+          } 
+          else 
+          {
+            lb(joint_num-1) = joint->limits->lower;
+            ub(joint_num-1) = joint->limits->upper;
           }
-          hasLimits = 1;
         }
-        else {
-          hasLimits = 0;
+        else 
+        {
+          lb(joint_num-1) = std::numeric_limits<float>::lowest();
+          ub(joint_num-1) = std::numeric_limits<float>::max();
         }
-        if(hasLimits) {
-          lb(joint_num-1)=lower;
-          ub(joint_num-1)=upper;
-        }
-        else {
-          lb(joint_num-1)=std::numeric_limits<float>::lowest();
-          ub(joint_num-1)=std::numeric_limits<float>::max();
-        }
-        ROS_INFO_STREAM("IK Using joint "<<joint->name<<" "<<lb(joint_num-1)<<" "<<ub(joint_num-1));
+      }
+
+      if(fixed_joints.count(joint_name))
+      {
+        lb(joint_num-1) = ub(joint_num-1) = fixed_joints.at(joint_name);
       }
     }
-    
+
     initialize();
   }
-
 
   TRAC_IK::TRAC_IK(const KDL::Chain& _chain, const KDL::JntArray& _q_min, const KDL::JntArray& _q_max, double _maxtime, double _eps, SolveType _type):
     initialized(false),

@@ -432,7 +432,7 @@ namespace NLOPT_IK {
     }
 
     if (q_init.data.size() != types.size()) {
-      ROS_ERROR_THROTTLE(1.0,"IK seeded with wrong number of joints.  Expected %d but got %d",(int)types.size(), (int)q_init.data.size());
+      ROS_ERROR("IK seeded with wrong number of joints.  Expected %d but got %d",(int)types.size(), (int)q_init.data.size());
       return -3;
     }
 
